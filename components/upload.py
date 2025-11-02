@@ -1,6 +1,6 @@
 import streamlit as st
 import os
-from modules.vectorstore import upload_pdfs_to_vectorstore, get_session_id
+from modules.vectorstore import upload_pdfs_to_vectorstore, get_session_id, clear_session_data
 
 def list_uploaded_documents(session_id):
     """List PDFs for current session"""
@@ -89,3 +89,23 @@ def render_uploader():
                 
             except Exception as e:
                 st.sidebar.error(f"Error uploading files: {str(e)}")
+
+    # Allow user to clear their own session data (namespace + uploaded files)
+    if st.sidebar.button("🧹 Clear my session data"):
+        with st.spinner("Clearing your session data..."):
+            try:
+                # Clear vectors in Pinecone for this session
+                clear_session_data(session_id)
+
+                # Remove uploaded files for this session
+                upload_dir = f"./uploaded_docs/{session_id}"
+                if os.path.exists(upload_dir):
+                    for fname in os.listdir(upload_dir):
+                        fp = os.path.join(upload_dir, fname)
+                        if os.path.isfile(fp):
+                            os.remove(fp)
+
+                st.sidebar.success("✅ Your session data was cleared. No documents available.")
+                st.rerun()
+            except Exception as e:
+                st.sidebar.error(f"Error clearing session data: {str(e)}")
