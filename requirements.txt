@@ -1,0 +1,11 @@
+streamlit==1.39.0
+langchain==0.3.13
+langchain-community==0.3.13
+langchain-core==0.3.28
+langchain-groq==0.2.1
+langchain-huggingface==0.1.2
+pinecone-client==5.0.1
+pypdf==5.1.0
+python-dotenv==1.0.1
+sentence-transformers==3.3.1
+pydantic==2.10.3

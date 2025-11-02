@@ -1,0 +1,2 @@
+# This file ensures the uploaded_docs directory is tracked by git
+# Actual PDF files are ignored by .gitignore
