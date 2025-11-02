@@ -21,10 +21,10 @@ class SimpleRetriever(BaseRetriever):
     def _get_relevant_documents(self, query: str) -> List[Document]:
         return self._docs
 
-def ask_question(question: str):
-    """Process a question and return answer with sources"""
+def ask_question(question: str, session_id: str):
+    """Process a question and return answer with sources (session-isolated)"""
     try:
-        print(f"🔍 User query: {question}")
+        print(f"🔍 User query: {question} (Session: {session_id[:8]}...)")
         
         # Initialize Pinecone
         pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
@@ -40,8 +40,13 @@ def ask_question(question: str):
         # Embed the query
         embedded_query = embed_model.embed_query(question)
         
-        # Query Pinecone with higher top_k for multi-document coverage
-        res = index.query(vector=embedded_query, top_k=20, include_metadata=True)
+        # Query Pinecone with session namespace (only this user's documents)
+        res = index.query(
+            vector=embedded_query, 
+            top_k=20, 
+            include_metadata=True,
+            namespace=session_id
+        )
         
         print(f"📊 Retrieved {len(res['matches'])} chunks from Pinecone")
         

@@ -37,10 +37,27 @@ def get_pinecone_index():
     
     return pc.Index(index_name)
 
-def upload_pdfs_to_vectorstore(file_paths):
-    """Process PDFs and upload to Pinecone"""
+def get_session_id():
+    """Get or create a unique session ID for this user"""
+    if 'session_id' not in st.session_state:
+        import uuid
+        st.session_state.session_id = str(uuid.uuid4())
+    return st.session_state.session_id
+
+def clear_session_data(session_id):
+    """Delete all vectors for this session from Pinecone"""
+    index = get_pinecone_index()
+    # Delete all vectors in this namespace (session)
+    index.delete(delete_all=True, namespace=session_id)
+    print(f"🗑️ Cleared all data for session: {session_id}")
+
+def upload_pdfs_to_vectorstore(file_paths, session_id):
+    """Process PDFs and upload to Pinecone with session isolation"""
     embed_model = get_embeddings()
     index = get_pinecone_index()
+    
+    # First, clear any existing data for this session
+    clear_session_data(session_id)
     
     all_texts = []
     all_metadatas = []
@@ -81,13 +98,13 @@ def upload_pdfs_to_vectorstore(file_paths):
             "metadata": metadata
         })
     
-    # Upload to Pinecone in batches
+    # Upload to Pinecone in batches with session namespace
     batch_size = 100
     for i in range(0, len(vectors), batch_size):
         batch = vectors[i:i + batch_size]
-        index.upsert(vectors=batch)
+        index.upsert(vectors=batch, namespace=session_id)
     
-    print(f"✅ Successfully uploaded {len(file_paths)} file(s) with {len(all_texts)} total chunks to Pinecone")
+    print(f"✅ Successfully uploaded {len(file_paths)} file(s) with {len(all_texts)} total chunks to Pinecone (Session: {session_id[:8]}...)")
     
     return {
         "files_count": len(file_paths),

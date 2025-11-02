@@ -34,6 +34,9 @@ st.markdown("""
 st.markdown('<div class="main-header">🤖 Noddy Bot - AI Resume Analyzer</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-header">Powered by Groq LLaMA 3.3 & Pinecone Vector DB</div>', unsafe_allow_html=True)
 
+# Session isolation info
+st.info("🔒 **Privacy Note**: Your uploaded documents are isolated to your session. Other users cannot see your PDFs.", icon="ℹ️")
+
 # Sidebar - Document Manager
 render_uploader()
 

@@ -1,8 +1,12 @@
 import streamlit as st
 from modules.query_handler import ask_question
+from modules.vectorstore import get_session_id
 
 def render_chat():
     """Render the chat interface"""
+    
+    # Get session ID
+    session_id = get_session_id()
     
     # Initialize chat history in session state
     if "messages" not in st.session_state:
@@ -32,7 +36,7 @@ def render_chat():
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
                 try:
-                    result = ask_question(prompt)
+                    result = ask_question(prompt, session_id)
                     response = result.get("response", "Sorry, I couldn't process your question.")
                     sources = result.get("sources", [])
                     

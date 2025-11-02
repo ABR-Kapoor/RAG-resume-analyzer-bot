@@ -12,8 +12,9 @@ venv/
 ENV/
 .venv
 
-# Uploaded files
-uploaded_docs/*.pdf
+# Uploaded files (session-specific)
+uploaded_docs/*
+!uploaded_docs/.gitkeep
 
 # IDE
 .vscode/

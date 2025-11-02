@@ -1,12 +1,11 @@
 import streamlit as st
 import os
-from modules.vectorstore import upload_pdfs_to_vectorstore
+from modules.vectorstore import upload_pdfs_to_vectorstore, get_session_id
 
-def list_uploaded_documents():
-    """List all PDFs in uploaded_docs directory"""
-    upload_dir = "./uploaded_docs"
+def list_uploaded_documents(session_id):
+    """List PDFs for current session"""
+    upload_dir = f"./uploaded_docs/{session_id}"
     if not os.path.exists(upload_dir):
-        os.makedirs(upload_dir)
         return []
     
     files = []
@@ -27,12 +26,18 @@ def list_uploaded_documents():
 def render_uploader():
     st.sidebar.header("📚 Document Manager")
     
-    # Show already uploaded documents
-    st.sidebar.subheader("Already Uploaded PDFs")
-    uploaded_docs = list_uploaded_documents()
+    # Get session ID
+    session_id = get_session_id()
+    
+    # Show session info
+    st.sidebar.caption(f"🔒 Session: {session_id[:8]}...")
+    
+    # Show already uploaded documents for this session
+    st.sidebar.subheader("Your Uploaded PDFs")
+    uploaded_docs = list_uploaded_documents(session_id)
     
     if uploaded_docs:
-        st.sidebar.success(f"✅ {len(uploaded_docs)} document(s) in database")
+        st.sidebar.success(f"✅ {len(uploaded_docs)} document(s) in your session")
         for doc in uploaded_docs:
             with st.sidebar.expander(f"📄 {doc['filename']}"):
                 st.write(f"**Size:** {doc['size_mb']} MB")
@@ -58,8 +63,8 @@ def render_uploader():
     if st.sidebar.button("Upload to Database") and uploaded_files:
         with st.spinner(f"Uploading {len(uploaded_files)} file(s)..."):
             try:
-                # Save files temporarily
-                upload_dir = "./uploaded_docs"
+                # Create session-specific directory
+                upload_dir = f"./uploaded_docs/{session_id}"
                 os.makedirs(upload_dir, exist_ok=True)
                 
                 saved_files = []
@@ -69,13 +74,15 @@ def render_uploader():
                         f.write(uploaded_file.getbuffer())
                     saved_files.append(file_path)
                 
-                # Process and upload to vector store
-                result = upload_pdfs_to_vectorstore(saved_files)
+                # Process and upload to vector store with session isolation
+                result = upload_pdfs_to_vectorstore(saved_files, session_id)
                 
                 st.sidebar.success(f"✅ Successfully processed {len(uploaded_files)} PDF file(s)")
                 st.sidebar.write("Files processed:")
                 for fname in [f.name for f in uploaded_files]:
                     st.sidebar.write(f"  • {fname}")
+                
+                st.sidebar.info("ℹ️ Only your uploaded documents are visible to you")
                 
                 # Clear the uploader and refresh
                 st.rerun()
